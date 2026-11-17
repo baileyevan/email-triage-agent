@@ -49,6 +49,7 @@ these two keys:
 """
 
 
+
 def build_system_prompt() -> str:
     """Instructions first, then the spec, then the output format reminder."""
     return (
