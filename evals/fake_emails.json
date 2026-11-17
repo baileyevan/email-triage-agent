@@ -82,7 +82,7 @@
   },
   {
     "id": "e10",
-    "from": "Amazon <auto-confirm@orders.shopmart.example>",
+    "from": "Amazon <auto-confirm@amazon.example>",
     "received": "2026-11-14T19:45:00-05:00",
     "subject": "Your Order Has Been Confirmed",
     "body": "Thank you for your purchase! Your order #482910 has been successfully placed. Your total was $42.99. You will receive another email when your items have shipped. Keep this email for your records.",
