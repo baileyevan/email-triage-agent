@@ -1,4 +1,9 @@
 .venv/
 __pycache__/
 .pytest_cache/
+secrets/
+data/
+evals/last_run.json
+
 .env
+token.json

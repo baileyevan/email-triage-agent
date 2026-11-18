@@ -95,7 +95,9 @@ def classify(email: dict) -> TriageResult:
     )
     
     if result["stopReason"] == "max_tokens":
-        return _fallback("truncated: hit max_tokens")
+        return _fallback(
+            f"truncated: hit max_tokens (output tokens: {result['outputTokens']}, text length: {len(result['text'])})"
+        )
     
     try:
         data = json.loads(result["text"])

@@ -95,8 +95,8 @@
     "received": "2026-11-15T10:10:00-05:00",
     "subject": "Bailey, 50% off accessories for our past customers",
     "body": "Thanks for shopping with TechDeals last month! As a returning customer, you get early access to our biggest sale of the season: up to 50% off keyboards, mice, monitors, and laptop accessories. Shop today before the deals disappear.",
-    "label": "LOW_PRIORITY",
-    "notes": "Promotion; the text itself shows a prior purchase."
+    "label": "TRASH",
+    "notes": "Promotion; the text itself shows a prior purchase. [relabeled TRASH: marketing is TRASH under the revised spec]"
   },
   {
     "id": "e12",
@@ -185,8 +185,8 @@
     "received": "2026-11-15T12:00:00-05:00",
     "subject": "URGENT!!! Your rewards are about to be LOST",
     "body": "ATTENTION Bailey! Your ShopMart rewards from your October order are waiting. Don't miss out on exclusive savings on your next purchase, valid on select items. Shop now!",
-    "label": "LOW_PRIORITY",
-    "notes": "Claimed urgency with no real deadline or consequence. Rule 2."
+    "label": "TRASH",
+    "notes": "Claimed urgency with no real deadline or consequence. Rule 2. [relabeled TRASH: marketing is TRASH under the revised spec]"
   },
   {
     "id": "e22",
@@ -266,7 +266,7 @@
     "received": "2026-11-16T05:30:00-05:00",
     "subject": "12 new jobs that match your profile",
     "body": "Based on your saved searches, here are 12 new postings: Junior Software Engineer at Orbit Logic, Backend Developer at Cascade Systems, Associate Developer at Valley Bank, and more. View all matches in your dashboard.",
-    "label": "REVIEW",
-    "notes": "Job-alert digest."
+    "label": "LOW_PRIORITY",
+    "notes": "Job-alert digest. [relabeled LOW_PRIORITY: job-alert digests are LOW_PRIORITY under the revised spec]"
   }
 ]

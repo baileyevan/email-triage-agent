@@ -1,14 +1,15 @@
 import anthropic
 from dotenv import load_dotenv
+import os
 
 load_dotenv()
 
 client = anthropic.Anthropic()
-model = "claude-opus-5-5"
+model = os.getenv("MODEL", "claude-opus-5-5")
 
 def ask(messages, system: str | None = None):
     
-    maxTokens = 500
+    maxTokens = 1024
 
     args = {
         "model": model,
