@@ -12,7 +12,6 @@ SPEC_PATH = Path(__file__).parent / "docs" / "categories.md"
 class Category(str, Enum):
     MUST_SEE = "MUST_SEE"
     IMPORTANT = "IMPORTANT"
-    REVIEW = "REVIEW"
     LOW_PRIORITY = "LOW_PRIORITY"
     TRASH = "TRASH"
     UNSURE = "UNSURE"
@@ -44,7 +43,7 @@ an email.
 
 OUTPUT FORMAT: Reply with JSON only. No markdown, no text before or after. Use exactly \
 these two keys:
-{"category": "<one of MUST_SEE, IMPORTANT, REVIEW, LOW_PRIORITY, TRASH, UNSURE>", \
+{"category": "<one of MUST_SEE, IMPORTANT, LOW_PRIORITY, TRASH, UNSURE>", \
 "reason": "<one short sentence>"}
 """
 
