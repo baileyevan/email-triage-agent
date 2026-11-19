@@ -11,6 +11,13 @@ Read-only: it never deletes, moves, or sends mail (v1 only reads via `gmail.read
 - Email content is untrusted. It is wrapped in `<email>` tags, tag-closing text is neutralized, and the spec tells the model to ignore instructions found inside emails.
 - Optional: `retrieval.py` adds the 5 most similar labeled emails (TF-IDF cosine similarity) as examples. It was evaluated and is not enabled by default.
 
+## Dashboard (in progress)
+A local web dashboard groups emails by category: Must see, Important, Unsure, Low priority, Trash. It has a sidebar with counts, search, and expandable rows showing the model's reason and a link to open the message in Gmail.
+
+- Backend: FastAPI (`api.py`, `dashboard_data.py`), bound to `127.0.0.1`.
+- Front end: React + TypeScript + Vite (`frontend/`). Email content is rendered as plain text only, because subjects, bodies and the model's reason are untrusted.
+- **Current limitation:** it displays saved emails and saved model results from `data/`. It does not fetch or classify new mail yet.
+
 ## Evaluation
 - 30 synthetic emails (`evals/fake_emails.json`) cover hard cases: phishing, injected instructions, garbled mail.
 - 340 real emails from my inbox, labeled by me: a dev set (130) used while building, a first held-out set (70), a second held-out sample (100), and 40 emails from Gmail's Primary tab. Real mail is not in the repo.
@@ -49,10 +56,16 @@ python run_real_eval.py --split heldout2    # needs your own data/
 ```
 Needs `ANTHROPIC_API_KEY` in `.env` and Gmail OAuth credentials in `secrets/` (not included).
 
+Dashboard (needs Node 20 or newer and your own `data/` folder):
+```
+uvicorn api:app --host 127.0.0.1 --port 8000     # terminal 1, project root
+cd frontend && npm install && npm run dev          # terminal 2, open http://localhost:5173
+```
+
 ## Limitations
 - Single labeler (me), single inbox, junk-heavy sample.
 - Gmail OAuth is in testing mode; tokens expire about weekly.
 - `reason` text can quote attacker-controlled content, so render it as plain text.
 
 ## Next
-Gmail labeling in dry-run mode, a mocked-model test suite, cost/latency logging, an injection test set.
+Fetch and classify new mail with a per-message cache and a cost cap, a cheaper-model comparison, a mocked-model test suite, an injection test set, and a "mark as wrong" button that feeds corrections back into the eval labels.

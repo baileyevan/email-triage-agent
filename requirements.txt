@@ -9,3 +9,5 @@ pydantic==2.14.3
 pydantic_core==2.50.4
 python-dotenv==1.2.4
 scikit-learn==1.9.1
+fastapi
+uvicorn
