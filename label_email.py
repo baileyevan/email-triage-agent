@@ -8,9 +8,9 @@ DATA = Path(__file__).parent / "data"
 EMAILS = DATA / "real_emails.json"
 LABELS = DATA / "labels.json"
 PREVIEW = 1200
-CHOICES = {"1": "MUST_SEE", "2": "IMPORTANT", "3": "REVIEW",
-           "4": "LOW_PRIORITY", "5": "TRASH", "6": "UNSURE"}
-PROMPT = ("\n1 MUST_SEE  2 IMPORTANT  3 REVIEW  4 LOW_PRIORITY  5 TRASH  6 UNSURE\n"
+CHOICES = {"1": "MUST_SEE", "2": "IMPORTANT",
+           "3": "LOW_PRIORITY", "4": "TRASH", "5": "UNSURE"}
+PROMPT = ("\n1 MUST_SEE  2 IMPORTANT  3 LOW_PRIORITY  4 TRASH  5 UNSURE\n"
           "(add ? if hesitant)  m more  b back  q quit > ")
 
 

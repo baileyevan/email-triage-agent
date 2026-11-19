@@ -1,66 +1,58 @@
-# email-triage-agent
+# Email Triage Agent
 
-A learning project: an AI agent that helps triage an email inbox by sorting messages into important, needs-reply, junk, and other, with safety as a design goal from the start. I'm building it step by step to learn how LLM applications work: API calls, conversation state, structured output, tool use, evaluation, and guardrails.
+Classifies each email in my Gmail into one category, with a written spec and a measured evaluation.
 
-**Status: early development.** Only the first building block exists so far (see below). Everything under "Planned" is not built yet.
+Categories: `MUST_SEE`, `IMPORTANT`, `LOW_PRIORITY`, `TRASH`, `UNSURE`.
+Read-only: it never deletes, moves, or sends mail (v1 only reads via `gmail.readonly`).
 
-## What exists now
+## How it works
+- `docs/categories.md` is the source of truth: category definitions, numbered rules, and a rulings table. It is loaded into the system prompt.
+- `classifier.py` sends one email at a time to the Anthropic Messages API and expects a JSON object (`category`, `reason`). Output is validated with Pydantic. Truncation (`max_tokens`) or invalid output falls back to `UNSURE` and is counted separately.
+- Email content is untrusted. It is wrapped in `<email>` tags, tag-closing text is neutralized, and the spec tells the model to ignore instructions found inside emails.
+- Optional: `retrieval.py` adds the 5 most similar labeled emails (TF-IDF cosine similarity) as examples. It was evaluated and is not enabled by default.
 
-A terminal chat loop built on the Anthropic Python SDK. It demonstrates:
+## Evaluation
+- 30 synthetic emails (`evals/fake_emails.json`) cover hard cases: phishing, injected instructions, garbled mail.
+- 340 real emails from my inbox, labeled by me: a dev set (130) used while building, a first held-out set (70), a second held-out sample (100), and 40 emails from Gmail's Primary tab. Real mail is not in the repo.
+- Method: dev/held-out split fixed at fetch time, held-out run once per design, noise floor measured by repeating runs (about 2 emails of 130).
 
-- Calling the Messages API through a single `ask()` function that returns the reply text and token counts
-- Conversation state: the model has no memory between calls, so the program keeps a `messages` list and resends the full history every turn
-- Token usage per turn, which shows how the cost of a conversation grows as history accumulates
+### Results (model: claude-opus-5-5)
+| Set | Baseline | With retrieval | Always-TRASH |
+|---|---|---|---|
+| Dev (130), leave-one-out | 118-120 | 126 | n/a |
+| Held-out v1 (70), before policy changes | 58 | 61 | 59 |
+| Held-out v2 (100), after policy clarification* | 94 | 96 | 94 |
 
-## Setup
+\*Not a clean held-out result: I changed the policy after seeing earlier errors on this set.
 
-Requires Python 3 and an Anthropic API key.
+What I can say:
+- Across about 134 fresh emails, nothing worth keeping was sent to TRASH.
+- About 1-6% of junk was surfaced as important (false alarms).
+- Retrieval gave no difference beyond the noise floor. The simpler baseline is the default.
 
-```bash
+What I cannot say:
+- Accuracy is misleading: about 92% of my mail is junk, so always answering `TRASH` ties the model.
+- Recall on important mail is unmeasured. My samples contained almost no real `IMPORTANT` or `MUST_SEE` mail.
+
+### What I learned
+- Most gains came from aligning the spec with my real policy, not from changing the model or prompt.
+- My own labels drifted over time. The same sender groups were labeled differently across sessions, which means label noise limits any score.
+- Dev scores overstated held-out performance.
+
+## Run
+```
 python -m venv .venv
-
-# Windows (PowerShell)
 .venv\Scripts\activate
-# macOS / Linux
-source .venv/bin/activate
-
-pip install anthropic python-dotenv
+pip install -r requirements.txt
+python run_eval.py                          # synthetic set
+python run_real_eval.py --split heldout2    # needs your own data/
 ```
+Needs `ANTHROPIC_API_KEY` in `.env` and Gmail OAuth credentials in `secrets/` (not included).
 
-Create a `.env` file in the project folder (it is gitignored) containing:
+## Limitations
+- Single labeler (me), single inbox, junk-heavy sample.
+- Gmail OAuth is in testing mode; tokens expire about weekly.
+- `reason` text can quote attacker-controlled content, so render it as plain text.
 
-```
-ANTHROPIC_API_KEY=your-key-here
-```
-
-Then run:
-
-```bash
-python main.py
-```
-
-Type `quit` or `exit` to stop. Never commit your `.env` file or share your key.
-
-## Planned
-
-- [ ] Email classification with a system prompt and structured (validated) JSON output
-- [ ] An evaluation set: hand-labeled emails, with a held-out portion never used for tuning, and scoring that weights "missed an important email" as worse than "showed a junk email"
-- [ ] A no-tools baseline, then measured comparisons as each capability is added
-- [ ] Read-only mailbox access, run first in dry-run mode
-- [ ] Agent tools (context lookup, similar-email retrieval) added only where they improve the measured score
-- [ ] Prompt-injection test set: malicious emails that try to give the model instructions
-- [ ] Logging and per-request cost tracking
-- [ ] FastAPI wrapper, tests with the model call mocked, and deployment
-- [ ] Exposing the triage tools through an MCP server
-
-## Design principles
-
-These are goals for the system, not yet implemented:
-
-- **Never delete.** The agent can only label, archive, or draft. Anything beyond that requires my approval.
-- **Email content is data, never instructions.** The model gets only the tools it needs (no send, forward, or delete), and every action is logged.
-- **Measure before adding complexity.** Each added layer (retrieval, tools, multiple agents) has to improve the evaluation score to stay.
-
-## Data and privacy
-
-No real emails are stored in this repository. Evaluation uses synthetic or properly licensed public data. Anything run against my real inbox stays local and private.
+## Next
+Gmail labeling in dry-run mode, a mocked-model test suite, cost/latency logging, an injection test set.

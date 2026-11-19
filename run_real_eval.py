@@ -11,7 +11,11 @@ K = 5  # number of retrieved examples when --retrieval is used
 
 
 def main() -> None:
-    split = "heldout" if "--heldout" in sys.argv else "dev"
+    split = "dev"
+    if "--split" in sys.argv:
+        split = sys.argv[sys.argv.index("--split") + 1]
+    elif "--heldout" in sys.argv:
+        split = "heldout"
     use_retrieval = "--retrieval" in sys.argv
 
     all_emails = json.loads((D / "real_emails.json").read_text(encoding="utf-8"))
