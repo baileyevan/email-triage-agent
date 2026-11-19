@@ -1,24 +1,38 @@
 import json
 import sys
-from collections import Counter
+from collections import Counter, defaultdict
 from pathlib import Path
 
 from classifier import classify
 
 D = Path(__file__).parent / "data"
-CATS = ["MUST_SEE", "IMPORTANT", "REVIEW", "LOW_PRIORITY", "TRASH", "UNSURE"]
+CATS = ["MUST_SEE", "IMPORTANT", "LOW_PRIORITY", "TRASH", "UNSURE"]
+K = 5  # number of retrieved examples when --retrieval is used
 
 
 def main() -> None:
     split = "heldout" if "--heldout" in sys.argv else "dev"
-    emails = [e for e in json.loads((D / "real_emails.json").read_text(encoding="utf-8"))
-              if e["split"] == split]
+    use_retrieval = "--retrieval" in sys.argv
+
+    all_emails = json.loads((D / "real_emails.json").read_text(encoding="utf-8"))
     labels = json.loads((D / "labels.json").read_text(encoding="utf-8"))
-    print(f"evaluating {len(emails)} emails from the {split} split")
+    emails = [e for e in all_emails if e["split"] == split]
+
+    pool = None
+    if use_retrieval:
+        from retrieval import ExamplePool
+        # The pool is always built from DEV emails only. Held-out emails never enter it.
+        pool = ExamplePool([{**e, "label": labels[e["id"]]["label"]}
+                            for e in all_emails if e["split"] == "dev"])
+
+    mode = f"retrieval (k={K})" if use_retrieval else "baseline (no examples)"
+    print(f"evaluating {len(emails)} emails from the {split} split, mode: {mode}")
 
     rows = []
     for i, e in enumerate(emails, 1):
-        r = classify(e)
+        # exclude_id makes it leave-one-out: a dev email can never retrieve itself
+        examples = pool.similar(e, k=K, exclude_id=e["id"]) if pool else None
+        r = classify(e, examples)
         rows.append({
             "id": e["id"],
             "expected": labels[e["id"]]["label"],
@@ -35,7 +49,7 @@ def main() -> None:
     correct = sum(r["expected"] == r["got"] for r in rows)
     majority = Counter(r["expected"] for r in rows).most_common(1)[0]
 
-    matrix = {c: Counter() for c in CATS}
+    matrix = defaultdict(Counter)
     for r in rows:
         matrix[r["expected"]][r["got"]] += 1
 
@@ -55,7 +69,7 @@ def main() -> None:
         print(f"  {c:13} recall {recall:8} precision {precision}")
 
     worth_seeing = {"MUST_SEE", "IMPORTANT"}
-    buried = [r["id"] for r in rows if r["expected"] in worth_seeing and r["got"] in {"REVIEW", "LOW_PRIORITY", "TRASH"}]
+    buried = [r["id"] for r in rows if r["expected"] in worth_seeing and r["got"] in {"LOW_PRIORITY", "TRASH"}]
     to_trash = [r["id"] for r in rows if r["expected"] not in {"TRASH", "UNSURE"} and r["got"] == "TRASH"]
     false_alarms = [r["id"] for r in rows if r["expected"] in {"TRASH", "LOW_PRIORITY"} and r["got"] in worth_seeing]
     fallbacks = sum(r["source"] == "fallback" for r in rows)
